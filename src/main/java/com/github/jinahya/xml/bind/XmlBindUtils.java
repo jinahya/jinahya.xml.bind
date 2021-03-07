@@ -35,7 +35,6 @@ public final class XmlBindUtils {
         }
     }
 
-
     static QName qualifiedName(String localPart) {
         requireNonNull(localPart, "localPart is null");
         if ((localPart = localPart.trim()).isEmpty()) {

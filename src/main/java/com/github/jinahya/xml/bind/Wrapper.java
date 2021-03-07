@@ -2,7 +2,6 @@ package com.github.jinahya.xml.bind;
 
 import javax.xml.bind.*;
 import javax.xml.bind.annotation.XmlAnyElement;
-import javax.xml.namespace.QName;
 import javax.xml.transform.Source;
 import java.beans.Introspector;
 import java.lang.reflect.Method;
@@ -62,25 +61,13 @@ public final class Wrapper<T> {
         requireNonNull(target, "target is null");
         final JAXBContext context = JAXBContext.newInstance(Wrapper.class, type);
         final JAXBElement<Wrapper<T>> wrapped = new JAXBElement<>(
-                XmlUtils.qualifiedName(Introspector.decapitalize(Wrapper.class.getSimpleName())),
+                XmlBindUtils.qualifiedName(Introspector.decapitalize(Wrapper.class.getSimpleName())),
                 (Class<Wrapper<T>>) (Class<?>) Wrapper.class, Wrapper.of(elements));
         Marshaller marshaller = context.createMarshaller();
         if (operator != null) {
             marshaller = operator.apply(marshaller);
         }
-        final Method method = Arrays.stream(Marshaller.class.getMethods())
-                .filter(m -> "marshal".equals(m.getName()))
-                .filter(m -> {
-                    final Class<?>[] parameterTypes = m.getParameterTypes();
-                    return parameterTypes.length == 2 && parameterTypes[1].isAssignableFrom(target.getClass());
-                })
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("no 'marshal' method found for " + target));
-        try {
-            method.invoke(marshaller, wrapped, target);
-        } catch (final ReflectiveOperationException roe) {
-            throw new RuntimeException("failed to marshal to " + target, roe);
-        }
+        XmlBindUtils.marshal(marshaller, wrapped, target);
     }
 
     /**
